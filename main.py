@@ -6,41 +6,143 @@ import matplotlib.pyplot as plt
 #----Global Variables----#
 quit = False
 
-#----Setup dataframe and query it here prior to creating visualisation and UI functions----#
+#----setting up original dataframe and updated dataframe with an additional column (win rate) to be used later in my data analysis in things such as stance, weight and height win rates.----#
 original_df = pd.read_csv('ufc-fighters-statistics.csv')
 
-
 ufcstats_df = pd.read_csv('ufc-fighters-statistics.csv')
-ufcstats_df['win rate'] = ufcstats_df['wins'] / (ufcstats_df['wins'] + ufcstats_df['losses'] + ufcstats_df['draws'])
+ufcstats_df['win rate'] = ufcstats_df['wins'] / (ufcstats_df['wins'] + ufcstats_df['losses'] + ufcstats_df['draws']) * 100
 
-
-#----Define Functions Below----#
+#----All my functions getting defined----#
+#-Shows the original dataset to the user-#
 def showOriginalData():
     print(original_df)
-
+#-Shows the updated dataset to the user with the additional column-#
 def showUpdatedData():
     print(ufcstats_df)
+#-Matches each fighters weight to one of the UFC's standardised weight classes which they fight under so I can find the average winrates for different weights-#
+def assign_weight_class(weight_in_kg):
+    if weight_in_kg <= 56.7:
+        return "Flyweight"
+    elif weight_in_kg <= 61.2:
+        return "Bantamweight"
+    elif weight_in_kg <= 65.8:
+        return "Featherweight"
+    elif weight_in_kg <= 70.3:
+        return "Lightweight"
+    elif weight_in_kg <= 77.1:
+        return "Welterweight"
+    elif weight_in_kg <= 83.9:
+        return "Middleweight"
+    elif weight_in_kg <= 93.0:
+        return "Light Heavyweight"
+    else:
+        return "Heavyweight"
 
+#-creates the variable: weight class so it can be projected onto the matplotlib graph which is also made in the form of a bar graph for users to see which weight performs the best-#
 def WeightWinrates():
-    ufcstats_df.plot(
+    
+    ufcstats_df['weight_class'] = ufcstats_df['weight_in_kg'].apply(assign_weight_class)
+    W_avg_winrates = ufcstats_df.groupby('weight_class')['win rate'].mean()
+    
+    # Plot the average win rates
+    W_avg_winrates.plot(
                     kind='bar',
-                    x='name',
-                    y='win rate',
                     color='red',
                     alpha=0.3,
-                    title='Weight winrates')
+                    title='Average Win Rates by Weight Class')
+    plt.ylabel('Average Win Rate')
     plt.show()
 
+#-Matches each fighters Height to a height range of 10cm so I can find the average winrates for each of these different height classes-#
+def assign_height_class(height_cm):
+    if height_cm <= 160:
+        return "160cm or less"
+    elif height_cm <= 170:
+        return "170-179cm"
+    elif height_cm <= 180:
+        return "180-189cm"
+    elif height_cm <= 190:
+        return "190-199cm"
+    elif height_cm <= 200:
+        return "200-209cm"
+    elif height_cm <= 210:
+        return "210-219cm"
+    elif height_cm >= 220:
+        return "220cm or over"
+
+#-adds the "height_class" variable and then graphs it and the fighters winrate onto a matplotlib chart.-#
+def HeightWinrates():
+    ufcstats_df['height_class'] = ufcstats_df['height_cm'].apply(assign_height_class)
+
+    # Calculate average win rates by height class
+    H_avg_winrates = ufcstats_df.groupby('height_class')['win rate'].mean()
+
+    H_avg_winrates.plot(
+                    kind ='bar',
+                    color='red',
+                    alpha=0.3,
+                    title='Average Win Rates by Height')
+    plt.ylabel('Average Win Rate')
+    plt.show()
+
+#-finds the mean win rate of each stance and contains a note detailing how there is less data on fighters stances compared to height & weight-#
+def StanceWinrates():
+    print('Please note that the data on stances is far more limited than the data on weight, height, win rate, etc.')
+    S_avg_winrates = ufcstats_df.groupby('stance')['win rate'].mean()
+
+    S_avg_winrates.plot(
+                    kind ='bar',
+                    color='red',
+                    alpha=0.3,
+                    title='Average Win Rates For each stance')
+    plt.ylabel('Average Win Rate')
+    plt.show()
+
+#-assigns the reach of each figher into a range of 10cm-#
+def assign_reach_class(reach_in_cm):
+    if reach_in_cm <= 159:
+        return "159cm or less"
+    elif reach_in_cm <= 160:
+        return "160-169cm"
+    elif reach_in_cm <= 170:
+        return "170-179cm"
+    elif reach_in_cm <= 180:
+        return "180-189cm"
+    elif reach_in_cm <= 190:
+        return "190-199cm"
+    elif reach_in_cm <= 200:
+        return "200-209cm"
+    elif reach_in_cm <= 210:
+        return "210-219cm"
+#-prints a note describing the smaller sample size of each fighters reach in contrast to each fighters weight and win rate. Then it creates the "reach_class" variable and plots it onto the matplotlib chart with the fighters winrates-#
+def ReachWinrates():
+    print('Please note that the data on reach is far more limited than the data on weight, height, win rate, etc.')
+
+    ufcstats_df['reach_class'] = ufcstats_df['reach_in_cm'].apply(assign_reach_class)
+
+    R_avg_winrates = ufcstats_df.groupby('reach_class')['win rate'].mean()
+
+    R_avg_winrates.plot(
+                    kind ='bar',
+                    color='red',
+                    alpha=0.3,
+                    title='Average Win Rates For different reaches')
+    plt.ylabel('Average Win Rate')
+    plt.show()
+#-Basic text based UI showing the user how to access each dataset and the updated information then allows the user to input a number 1-7 to make their choice. It then runs the corresponding function from the users choice or states if the user inputted something wrong and needs to try again-#
 def userOptions():
     global quit
 
-    print("""Welcome to the Goofy UFC dataset. What attributes do you want to take a look at?
+    print("""Welcome to the UFC Fighter Metrics. You can visualise how different attributes affect fighters winrates by choosing one of the options below. 
           
-    Please select an option:
+    Please select one of these:
     1 - Show the original dataset
     2 - Show the updated Data Frame
     3 - Visualise the average winrate of each weight class
-    4 - Quit Program
+    4 - Visualise the average winrate of different heights
+    5 - Visualise the average winrate for different stances
+    6 - Visualise the average winrate for differnt reaches
+    7 - Quit 
         """)
     
     try:
@@ -53,15 +155,21 @@ def userOptions():
         elif choice == 3:
             WeightWinrates()
         elif choice == 4:
+            HeightWinrates()
+        elif choice == 5:
+            StanceWinrates()
+        elif choice == 6:
+            ReachWinrates()
+        elif choice == 7:
             quit = True
         else:
             print('Pick a number, ya gronk.')
 
     except:
-        print('Because you didnt enter a number from the options, Heres an essay about orangutans: Orangutans: Guardians of the Rainforest Orangutans, also known as “persons of the forest,” are remarkable Asian great apes found in the lush rainforests of Southeast Asia. Lets delve into their fascinating world and explore their unique characteristics, habitat, and conservation challenges.1. Species and Habitat Bornean Orangutan (Pongo pygmaeus) Inhabits large portions of Borneo. Known for their distinctive cheek pads in older males. Typically twice the size of females, with a height of up to 1.3 meters (4.3 feet) and a weight of 130 kg (285 pounds).Coarse red hair covers their dark tan or brownish skin.Sumatran Orangutan (Pongo abelii)Limited to northern Sumatra. Shares cognitive abilities with gorillas and chimpanzees.Largest arboreal animals, spending over 90% of their waking hours in trees.Ripe-fruit eaters but consume a variety of foods, including invertebrates and occasional meat. Tapanuli Orangutan (Pongo tapanuliensis)Also found in northern Sumatra.Recently discovered and critically endangered.Distinctive features include a unique call and genetic differences.2. Threats and Conservation Habitat DestructionDeforestation due to logging, agriculture, and palm oil plantations threatens their rainforest homes.As trees disappear, orangutans lose both shelter and food sources.Illegal Wildlife TradeOrangutans are hunted and captured for the exotic pet trade. Their young are often separated from their mothers, causing immense distress. Climate ChangeAltered weather patterns affect fruit availability, impacting their diet.Rising temperatures and changing ecosystems pose additional challenges.3. The Guardians of BiodiversitySeed Dispersers Orangutans play a crucial role in rainforest ecology.They disperse seeds as they move through the canopy, aiding plant growth.Conservation EffortsOrganizations like the Orangutan Foundation International work tirelessly to protect orangutans.Reforestation, anti-poaching efforts, and education are vital components of conservation. In conclusion, orangutans are not just charismatic creatures; they are essential guardians of the rainforest. By understanding their plight and supporting conservation initiatives, we can ensure their survival and preserve the rich biodiversity of our planet. Remember, our actions today impact their future. Lets stand together as stewards of the forest and protect these remarkable beings!')
+        print('Please enter a number from the options')
 
    
 
-#----Main program----#
+#----Main program, just says to run the user options function until the user chooses the 7th function, quit----#
 while not quit:
     userOptions()
